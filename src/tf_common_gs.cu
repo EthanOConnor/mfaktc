@@ -44,6 +44,12 @@ extern "C" __host__ int tf_class_barrett87_gs(unsigned long long int k_min, unsi
 #define MFAKTC_FUNC mfaktc_barrett87_gs
 #ifdef MFAKTC_BARRETT87_GS_FIXED_SHIFTER_KERNEL
 #define MFAKTC_FUNC_FIXED_SHIFTER mfaktc_barrett87_gs_fixed_shifter
+#ifdef MFAKTC_BARRETT87_GS_FIXED_PROCESS_BITS
+#define MFAKTC_FIXED_SHIFTER_PROCESS_MATCH(MYSTUFF)                                                                  \
+    ((MYSTUFF)->gpu_sieve_processing_size == MFAKTC_BARRETT87_GS_FIXED_PROCESS_BITS)
+#else
+#define MFAKTC_FIXED_SHIFTER_PROCESS_MATCH(MYSTUFF) 1
+#endif
 #endif
 #ifdef MFAKTC_BARRETT87_GS_BIT15_KERNEL
 #define MFAKTC_FUNC_BIT15 mfaktc_barrett87_gs_bit15
@@ -184,7 +190,8 @@ extern "C" __host__ int tf_class_barrett92_gs(unsigned long long int k_min, unsi
 
 #ifdef MFAKTC_FUNC_FIXED_SHIFTER
         if (mystuff->exponent == MFAKTC_BARRETT87_GS_FIXED_EXP &&
-            mystuff->bit_min - 63 == MFAKTC_BARRETT87_GS_FIXED_BIT_MAX64) {
+            mystuff->bit_min - 63 == MFAKTC_BARRETT87_GS_FIXED_BIT_MAX64 &&
+            MFAKTC_FIXED_SHIFTER_PROCESS_MATCH(mystuff)) {
             MFAKTC_FUNC_FIXED_SHIFTER<<<numblocks, THREADS_PER_BLOCK, shared_mem_required>>>(
                 mystuff->exponent, k_base, mystuff->d_bitarray, mystuff->gpu_sieve_processing_size, shiftcount, b_preinit, mystuff->d_RES,
                 mystuff->bit_min - 63
@@ -285,5 +292,6 @@ extern "C" __host__ int tf_class_barrett92_gs(unsigned long long int k_min, unsi
 #endif
 #ifdef MFAKTC_FUNC_FIXED_SHIFTER
 #undef MFAKTC_FUNC_FIXED_SHIFTER
+#undef MFAKTC_FIXED_SHIFTER_PROCESS_MATCH
 #endif
 #undef MFAKTC_FUNC

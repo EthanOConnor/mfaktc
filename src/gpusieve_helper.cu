@@ -134,3 +134,128 @@ __device__ static void create_fbase96(int96 *f_base, int96 k_base, unsigned int 
     shl_96(f_base);
     f_base->d0 = f_base->d0 + 1;
 }
+
+#ifdef MFAKTC_BARRETT87_GS_FIXED_PROCESS_BITS
+#if (MFAKTC_BARRETT87_GS_FIXED_PROCESS_BITS < (THREADS_PER_BLOCK * 32))
+#error MFAKTC_BARRETT87_GS_FIXED_PROCESS_BITS must cover at least one 32-bit sieve word per thread
+#endif
+#if ((MFAKTC_BARRETT87_GS_FIXED_PROCESS_BITS % (THREADS_PER_BLOCK * 32)) != 0)
+#error MFAKTC_BARRETT87_GS_FIXED_PROCESS_BITS must be divisible by THREADS_PER_BLOCK * 32
+#endif
+
+__device__ static void create_k_deltas_fixed_process(unsigned int *bit_array, int *total_bit_count, unsigned short *k_deltas)
+{
+    enum { WORDS_PER_THREAD = MFAKTC_BARRETT87_GS_FIXED_PROCESS_BITS / (THREADS_PER_BLOCK * 32) };
+    int i, words_per_thread, sieve_word, k_bit_base;
+    __shared__ volatile unsigned short bitcount[THREADS_PER_BLOCK]; // Each thread of our block puts bit-counts here
+
+    // Get pointer to section of the bit_array this thread is processing.
+
+    bit_array += blockIdx.x * (MFAKTC_BARRETT87_GS_FIXED_PROCESS_BITS / 32) + threadIdx.x * WORDS_PER_THREAD;
+
+    // Count number of bits set in this thread's word(s) from the bit_array
+
+    bitcount[threadIdx.x] = 0;
+#pragma unroll
+    for (i = 0; i < WORDS_PER_THREAD; i++)
+        bitcount[threadIdx.x] += __popc(bit_array[i]);
+
+    // Create total count of bits set in block up to and including this threads popc.
+    // Kudos to Rocke Verser for the population counting code.
+    // CAUTION:  Following requires power-of-two block sizes up to 512 threads.
+
+    // First five tallies remain within one warp.  Should be in lock-step.
+    if (threadIdx.x & 1) // If we are running on any thread 0bxxxxxxx1, tally neighbor's count.
+        bitcount[threadIdx.x] += bitcount[threadIdx.x - 1];
+
+    if (threadIdx.x & 2) // If we are running on any thread 0bxxxxxx1x, tally neighbor's count.
+        bitcount[threadIdx.x] += bitcount[(threadIdx.x - 2) | 1];
+
+    if (threadIdx.x & 4) // If we are running on any thread 0bxxxxx1xx, tally neighbor's count.
+        bitcount[threadIdx.x] += bitcount[(threadIdx.x - 4) | 3];
+
+    if (threadIdx.x & 8) // If we are running on any thread 0bxxxx1xxx, tally neighbor's count.
+        bitcount[threadIdx.x] += bitcount[(threadIdx.x - 8) | 7];
+
+    if (threadIdx.x & 16) // If we are running on any thread 0bxxx1xxxx, tally neighbor's count.
+        bitcount[threadIdx.x] += bitcount[(threadIdx.x - 16) | 15];
+
+    // Further tallies are across warps.  Must synchronize
+    __syncthreads();
+    if (threadIdx.x & 32) // If we are running on any thread 0bxx1xxxxx, tally neighbor's count.
+        bitcount[threadIdx.x] += bitcount[(threadIdx.x - 32) | 31];
+
+    __syncthreads();
+    if (threadIdx.x & 64) // If we are running on any thread 0bx1xxxxxx, tally neighbor's count.
+        bitcount[threadIdx.x] += bitcount[(threadIdx.x - 64) | 63];
+
+    __syncthreads();
+    if (threadIdx.x & 128) // If we are running on any thread 0b1xxxxxxx, tally neighbor's count.
+        bitcount[threadIdx.x] += bitcount[(threadIdx.x - 128) | 127];
+
+#if THREADS_PER_BLOCK > 256
+    __syncthreads();
+    if (threadIdx.x & 256)
+        bitcount[threadIdx.x] += bitcount[255];
+#endif
+
+    // At this point, bitcount[...] contains the total number of bits for the indexed
+    // thread plus all lower-numbered threads.  I.e., the last entry is the total count.
+
+    __syncthreads();
+    *total_bit_count = bitcount[THREADS_PER_BLOCK - 1];
+
+    // Loop til this thread's section of the bit array is finished.
+
+    words_per_thread = WORDS_PER_THREAD;
+    sieve_word = *bit_array;
+    k_bit_base = threadIdx.x * WORDS_PER_THREAD * 32;
+    for (i = *total_bit_count - bitcount[threadIdx.x];; i++) {
+        int bit_to_test;
+
+        // Make sure we have a non-zero sieve word
+
+        while (sieve_word == 0) {
+            if (--words_per_thread == 0) break;
+            sieve_word = *++bit_array;
+            k_bit_base += 32;
+        }
+
+        // Check if this thread has processed all its set bits
+
+        if (sieve_word == 0) break;
+
+        // Find a bit to test in the sieve word
+
+        bit_to_test = 31 - __clz(sieve_word);
+        sieve_word &= ~(1 << bit_to_test);
+
+        // Copy the k value to the shared memory array
+
+        k_deltas[i] = k_bit_base + bit_to_test;
+    }
+
+    __syncthreads();
+    // Here, all warps in our block have placed their candidates in shared memory.
+    // Now we can start TFing candidates.
+}
+
+__device__ static void create_fbase96_fixed_process(int96 *f_base, int96 k_base, unsigned int exp)
+{
+    // Compute factor corresponding to first sieve bit in this block.
+
+    // Compute base k value
+    k_base.d0 = __add_cc(k_base.d0, __umul32(blockIdx.x * MFAKTC_BARRETT87_GS_FIXED_PROCESS_BITS, NUM_CLASSES));
+    k_base.d1 =
+        __addc(k_base.d1, __umul32hi(blockIdx.x * MFAKTC_BARRETT87_GS_FIXED_PROCESS_BITS, NUM_CLASSES)); /* k values are limited to 64 bits */
+
+    // Compute k * exp
+    f_base->d0 = __umul32(k_base.d0, exp);
+    f_base->d1 = __add_cc(__umul32hi(k_base.d0, exp), __umul32(k_base.d1, exp));
+    f_base->d2 = __addc(__umul32hi(k_base.d1, exp), 0);
+
+    // Compute f_base = 2 * k * exp + 1
+    shl_96(f_base);
+    f_base->d0 = f_base->d0 + 1;
+}
+#endif

@@ -256,6 +256,9 @@ exponent and bit class match the compile-time constants below.
     (void)exp;
     (void)shiftcount;
     (void)bit_max64;
+#ifdef MFAKTC_BARRETT87_GS_FIXED_PROCESS_BITS
+    (void)bits_to_process;
+#endif
 
 #ifdef MFAKTC_BARRETT87_GS_FIXED_BPREINIT
     int192 fixed_b_preinit;
@@ -273,8 +276,13 @@ exponent and bit class match the compile-time constants below.
     (void)b_preinit;
 #endif
 
+#ifdef MFAKTC_BARRETT87_GS_FIXED_PROCESS_BITS
+    create_k_deltas_fixed_process(bit_array, &total_bit_count, k_deltas);
+    create_fbase96_fixed_process(&f_base, k_base, fixed_exp);
+#else
     create_k_deltas(bit_array, bits_to_process, &total_bit_count, k_deltas);
     create_fbase96(&f_base, k_base, fixed_exp, bits_to_process);
+#endif
 
     for (i = threadIdx.x; i < total_bit_count; i += THREADS_PER_BLOCK) {
         k_delta = k_deltas[i];
