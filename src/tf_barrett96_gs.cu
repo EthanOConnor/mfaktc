@@ -230,6 +230,54 @@ bit level, preserving the generic kernel for all other Barrett87 assignments.
 }
 #endif
 
+#ifdef MFAKTC_BARRETT87_GS_FIXED_SHIFTER_KERNEL
+__global__ void
+#ifndef DEBUG_GPU_MATH
+__launch_bounds__(THREADS_PER_BLOCK, KERNEL_MIN_BLOCKS)
+    mfaktc_barrett87_gs_fixed_shifter(unsigned int exp, int96 k_base, unsigned int *bit_array, unsigned int bits_to_process,
+                                      int shiftcount, int192 b_preinit, unsigned int *RES, int bit_max64)
+#else
+__launch_bounds__(THREADS_PER_BLOCK, KERNEL_MIN_BLOCKS)
+    mfaktc_barrett87_gs_fixed_shifter(unsigned int exp, int96 k_base, unsigned int *bit_array, unsigned int bits_to_process,
+                                      int shiftcount, int192 b_preinit, unsigned int *RES, int bit_max64,
+                                      unsigned int *modbasecase_debug)
+#endif
+/*
+Specialized Barrett87 GPU-sieve kernel for one fixed exponent and bit class.
+The host dispatch in tf_common_gs.cu only launches this kernel when runtime
+exponent and bit class match the compile-time constants below.
+*/
+{
+    int96 f, f_base;
+    int i, total_bit_count, k_delta;
+    const unsigned int fixed_exp = MFAKTC_BARRETT87_GS_FIXED_EXP;
+    extern __shared__ unsigned short k_deltas[];
+
+    (void)exp;
+    (void)shiftcount;
+    (void)bit_max64;
+
+    create_k_deltas(bit_array, bits_to_process, &total_bit_count, k_deltas);
+    create_fbase96(&f_base, k_base, fixed_exp, bits_to_process);
+
+    for (i = threadIdx.x; i < total_bit_count; i += THREADS_PER_BLOCK) {
+        k_delta = k_deltas[i];
+
+        f.d0 = __add_cc(f_base.d0, __umul32(2 * k_delta * NUM_CLASSES, fixed_exp));
+        f.d1 = __addc_cc(f_base.d1, __umul32hi(2 * k_delta * NUM_CLASSES, fixed_exp));
+        f.d2 = __addc(f_base.d2, 0);
+
+        test_FC96_barrett87_fixed_shifter<MFAKTC_BARRETT87_GS_FIXED_BIT_MAX64, MFAKTC_BARRETT87_GS_FIXED_SHIFTER>(
+            f, b_preinit, RES
+#ifdef DEBUG_GPU_MATH
+            ,
+            modbasecase_debug
+#endif
+        );
+    }
+}
+#endif
+
 __global__ void
 #ifndef DEBUG_GPU_MATH
 __launch_bounds__(THREADS_PER_BLOCK, KERNEL_MIN_BLOCKS)

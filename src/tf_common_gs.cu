@@ -42,6 +42,9 @@ extern "C" __host__ int tf_class_barrett79_gs(unsigned long long int k_min, unsi
 #elif defined TF_BARRETT_87BIT_GS
 extern "C" __host__ int tf_class_barrett87_gs(unsigned long long int k_min, unsigned long long int k_max, mystuff_t *mystuff)
 #define MFAKTC_FUNC mfaktc_barrett87_gs
+#ifdef MFAKTC_BARRETT87_GS_FIXED_SHIFTER_KERNEL
+#define MFAKTC_FUNC_FIXED_SHIFTER mfaktc_barrett87_gs_fixed_shifter
+#endif
 #ifdef MFAKTC_BARRETT87_GS_BIT15_KERNEL
 #define MFAKTC_FUNC_BIT15 mfaktc_barrett87_gs_bit15
 #endif
@@ -179,6 +182,19 @@ extern "C" __host__ int tf_class_barrett92_gs(unsigned long long int k_min, unsi
 
         // Now let the GPU trial factor the candidates that survived the sieving
 
+#ifdef MFAKTC_FUNC_FIXED_SHIFTER
+        if (mystuff->exponent == MFAKTC_BARRETT87_GS_FIXED_EXP &&
+            mystuff->bit_min - 63 == MFAKTC_BARRETT87_GS_FIXED_BIT_MAX64) {
+            MFAKTC_FUNC_FIXED_SHIFTER<<<numblocks, THREADS_PER_BLOCK, shared_mem_required>>>(
+                mystuff->exponent, k_base, mystuff->d_bitarray, mystuff->gpu_sieve_processing_size, shiftcount, b_preinit, mystuff->d_RES,
+                mystuff->bit_min - 63
+#ifdef DEBUG_GPU_MATH
+                ,
+                mystuff->d_modbasecase_debug
+#endif
+            );
+        } else
+#endif
 #ifdef MFAKTC_FUNC_BIT15
         if (mystuff->bit_min - 63 == 15) {
             MFAKTC_FUNC_BIT15<<<numblocks, THREADS_PER_BLOCK, shared_mem_required>>>(
@@ -266,5 +282,8 @@ extern "C" __host__ int tf_class_barrett92_gs(unsigned long long int k_min, unsi
 
 #ifdef MFAKTC_FUNC_BIT15
 #undef MFAKTC_FUNC_BIT15
+#endif
+#ifdef MFAKTC_FUNC_FIXED_SHIFTER
+#undef MFAKTC_FUNC_FIXED_SHIFTER
 #endif
 #undef MFAKTC_FUNC

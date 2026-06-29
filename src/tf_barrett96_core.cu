@@ -447,6 +447,130 @@ __device__ static void test_FC96_barrett87(int96 f, int192 b, unsigned int shift
     );
 }
 
+#ifdef MFAKTC_BARRETT87_GS_FIXED_SHIFTER_KERNEL
+template <int FIXED_BIT_MAX64, unsigned int FIXED_SHIFTER>
+__device__ static __forceinline__ void test_FC96_barrett87_fixed_shifter(int96 f, int192 b, unsigned int *RES
+#ifdef DEBUG_GPU_MATH
+                                                                         ,
+                                                                         unsigned int *modbasecase_debug
+#endif
+)
+{
+    int96 a, u;
+    int192 tmp192;
+    int96 tmp96;
+    float ff;
+    const int bit_max64 = FIXED_BIT_MAX64;
+
+    trace_96_textmsg(__FILE__, __LINE__, f, "--- barrett87 fixed-shifter start ---");
+    ff = __uint2float_rn(f.d2);
+    ff = ff * 4294967296.0f + __uint2float_rn(f.d1);
+    ff = __int_as_float(0x3f7ffffb) / ff;
+
+    tmp192.d5 = 1 << (bit_max64 - 1);
+    tmp192.d4 = 0;
+    tmp192.d3 = 0;
+    tmp192.d2 = 0;
+    tmp192.d1 = 0;
+    tmp192.d0 = 0;
+
+#ifndef DEBUG_GPU_MATH
+    div_192_96(&u, tmp192, f, ff);
+#else
+    div_192_96(&u, tmp192, f, ff, modbasecase_debug);
+#endif
+    trace_96_96(__FILE__, __LINE__, f, "u", u);
+
+    a.d0 = __fshift_r(b.d2, b.d3, bit_max64 - 1);
+    a.d1 = __fshift_r(b.d3, b.d4, bit_max64 - 1);
+    a.d2 = __fshift_r(b.d4, b.d5, bit_max64 - 1);
+    trace_96_96(__FILE__, __LINE__, f, "a", a);
+
+    mul_96_192_no_low3(&tmp192, a, u);
+
+    a.d0 = tmp192.d3;
+    a.d1 = tmp192.d4;
+    a.d2 = tmp192.d5;
+    trace_96_96(__FILE__, __LINE__, f, "a", a);
+
+    mul_96(&tmp96, a, f);
+    trace_96_96(__FILE__, __LINE__, f, "tmp96", tmp96);
+
+    // clang-format off
+    a.d0 = __sub_cc( b.d0, tmp96.d0);
+    a.d1 = __subc_cc(b.d1, tmp96.d1);
+    a.d2 = __subc(   b.d2, tmp96.d2);
+    // clang-format on
+    trace_96_96(__FILE__, __LINE__, f, "a", a);
+
+#define BARRETT87_FIXED_SHIFTER_STEP(STEP)                                                                            \
+    if ((FIXED_SHIFTER << (STEP)) != 0U) {                                                                            \
+        trace_96_textmsg(__FILE__, __LINE__, f, "--- fixed-shifter loop step ---");                                  \
+        square_96_192(&b, a);                                                                                         \
+        trace_96_192(__FILE__, __LINE__, f, "b", b);                                                                  \
+                                                                                                                       \
+        a.d0 = __fshift_r(b.d2, b.d3, bit_max64 - 1);                                                                 \
+        a.d1 = __fshift_r(b.d3, b.d4, bit_max64 - 1);                                                                 \
+        a.d2 = __fshift_r(b.d4, b.d5, bit_max64 - 1);                                                                 \
+        trace_96_96(__FILE__, __LINE__, f, "a", a);                                                                   \
+                                                                                                                       \
+        mul_96_192_no_low3(&tmp192, a, u);                                                                            \
+                                                                                                                       \
+        a.d0 = tmp192.d3;                                                                                             \
+        a.d1 = tmp192.d4;                                                                                             \
+        a.d2 = tmp192.d5;                                                                                             \
+        trace_96_96(__FILE__, __LINE__, f, "a", a);                                                                   \
+                                                                                                                       \
+        mul_96(&tmp96, a, f);                                                                                         \
+        trace_96_96(__FILE__, __LINE__, f, "tmp96", tmp96);                                                          \
+                                                                                                                       \
+        a.d0 = __sub_cc(b.d0, tmp96.d0);                                                                              \
+        a.d1 = __subc_cc(b.d1, tmp96.d1);                                                                             \
+        a.d2 = __subc(b.d2, tmp96.d2);                                                                                \
+        trace_96_96(__FILE__, __LINE__, f, "a", a);                                                                   \
+                                                                                                                       \
+        if ((FIXED_SHIFTER << (STEP)) & 0x80000000U) shl_96(&a);                                                      \
+    }
+
+    BARRETT87_FIXED_SHIFTER_STEP(0)
+    BARRETT87_FIXED_SHIFTER_STEP(1)
+    BARRETT87_FIXED_SHIFTER_STEP(2)
+    BARRETT87_FIXED_SHIFTER_STEP(3)
+    BARRETT87_FIXED_SHIFTER_STEP(4)
+    BARRETT87_FIXED_SHIFTER_STEP(5)
+    BARRETT87_FIXED_SHIFTER_STEP(6)
+    BARRETT87_FIXED_SHIFTER_STEP(7)
+    BARRETT87_FIXED_SHIFTER_STEP(8)
+    BARRETT87_FIXED_SHIFTER_STEP(9)
+    BARRETT87_FIXED_SHIFTER_STEP(10)
+    BARRETT87_FIXED_SHIFTER_STEP(11)
+    BARRETT87_FIXED_SHIFTER_STEP(12)
+    BARRETT87_FIXED_SHIFTER_STEP(13)
+    BARRETT87_FIXED_SHIFTER_STEP(14)
+    BARRETT87_FIXED_SHIFTER_STEP(15)
+    BARRETT87_FIXED_SHIFTER_STEP(16)
+    BARRETT87_FIXED_SHIFTER_STEP(17)
+    BARRETT87_FIXED_SHIFTER_STEP(18)
+    BARRETT87_FIXED_SHIFTER_STEP(19)
+    BARRETT87_FIXED_SHIFTER_STEP(20)
+    BARRETT87_FIXED_SHIFTER_STEP(21)
+    BARRETT87_FIXED_SHIFTER_STEP(22)
+    BARRETT87_FIXED_SHIFTER_STEP(23)
+    BARRETT87_FIXED_SHIFTER_STEP(24)
+    BARRETT87_FIXED_SHIFTER_STEP(25)
+    BARRETT87_FIXED_SHIFTER_STEP(26)
+    BARRETT87_FIXED_SHIFTER_STEP(27)
+    BARRETT87_FIXED_SHIFTER_STEP(28)
+    BARRETT87_FIXED_SHIFTER_STEP(29)
+    BARRETT87_FIXED_SHIFTER_STEP(30)
+    BARRETT87_FIXED_SHIFTER_STEP(31)
+
+#undef BARRETT87_FIXED_SHIFTER_STEP
+
+    mod_simple_96_and_check_big_factor96(a, f, ff, RES);
+}
+#endif
+
 __device__ static void test_FC96_barrett79(int96 f, int192 b, unsigned int shifter, unsigned int *RES
 #ifdef CPU_SIEVE
                                            ,
