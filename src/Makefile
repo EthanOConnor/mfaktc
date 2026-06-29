@@ -31,6 +31,11 @@ KDELTA_SMEM_U16 ?= 0
 ifeq ($(KDELTA_SMEM_U16),1)
 NVCCFLAGS += -DMFAKTC_KDELTA_SMEM_U16
 endif
+GSPROCESS_MAX64 ?= 0
+ifeq ($(GSPROCESS_MAX64),1)
+NVCCFLAGS += -DMFAKTC_GPU_SIEVE_PROCESS_MAX64
+CFLAGS += -DMFAKTC_GPU_SIEVE_PROCESS_MAX64
+endif
 
 # generate code for compute capabilities - see this table for supported
 # versions: https://en.wikipedia.org/wiki/CUDA#GPUs_supported

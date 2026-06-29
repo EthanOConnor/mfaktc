@@ -178,8 +178,12 @@ The following lines define the min, default and max value.
 
 #define GPU_SIEVE_PROCESS_SIZE_MIN           8 /* Processing 8 Kib in each block is minimum (256 threads * 1 word of 32 bits) */
 #define GPU_SIEVE_PROCESS_SIZE_DEFAULT      16 /* Default is processing 16 Kib */
+#ifdef MFAKTC_GPU_SIEVE_PROCESS_MAX64
+#define GPU_SIEVE_PROCESS_SIZE_MAX          64 /* Upper limit is 64K, since k deltas still fit in unsigned short. */
+#else
 #define GPU_SIEVE_PROCESS_SIZE_MAX          32 /* Upper limit is 64K, since we store k values as "short".
                                                   Not validated and shared memory might be an issue! */
+#endif
 // clang-format on
 
 #ifdef WAGSTAFF
