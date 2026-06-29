@@ -11,6 +11,14 @@ CFLAGS_EXTRA_SIEVE = -funroll-all-loops
 # compiler settings for .cu files (GPU)
 NVCC = nvcc
 NVCCFLAGS = $(CUDA_INCLUDE) --ptxas-options=-v -O3 -Wno-deprecated-gpu-targets
+LINEINFO ?= 0
+ifeq ($(LINEINFO),1)
+NVCCFLAGS += -lineinfo
+endif
+MUL96_PTX ?= 0
+ifeq ($(MUL96_PTX),1)
+NVCCFLAGS += -DMFAKTC_FORCE_MUL96_PTX
+endif
 
 # generate code for compute capabilities - see this table for supported
 # versions: https://en.wikipedia.org/wiki/CUDA#GPUs_supported

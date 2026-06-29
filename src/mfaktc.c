@@ -723,6 +723,7 @@ int main(int argc, char **argv)
     int i, tmp = 0;
     char *ptr;
     int use_worktodo = 1;
+    int run_startup_selftest = 1;
 
     i = 1;
     memset(&mystuff, 0, sizeof(mystuff));
@@ -799,6 +800,8 @@ int main(int argc, char **argv)
         } else if (!strcmp((char *)"-st2", argv[i])) {
             mystuff.mode         = MODE_SELFTEST_FULL;
             mystuff.selftestsize = 2;
+        } else if (!strcmp((char *)"--no-startup-selftest", argv[i])) {
+            run_startup_selftest = 0;
         } else if (!strcmp((char *)"--timertest", argv[i])) {
             timertest();
             return 0;
@@ -1070,10 +1073,14 @@ int main(int argc, char **argv)
     mystuff.sieve_primes_upper_limit = mystuff.sieve_primes_max;
     if (mystuff.mode == MODE_NORMAL) {
         /* before we start real work run a small selftest */
-        mystuff.mode = MODE_SELFTEST_SHORT;
-        logprintf(&mystuff, "running a simple self-test...\n");
-        if (selftest(&mystuff, 1) != 0) return 1; /* selftest failed :( */
-        mystuff.mode     = MODE_NORMAL;
+        if (run_startup_selftest) {
+            mystuff.mode = MODE_SELFTEST_SHORT;
+            logprintf(&mystuff, "running a simple self-test...\n");
+            if (selftest(&mystuff, 1) != 0) return 1; /* selftest failed :( */
+            mystuff.mode = MODE_NORMAL;
+        } else {
+            logprintf(&mystuff, "startup self-test skipped by --no-startup-selftest\n");
+        }
         mystuff.h_RES[0] = 0;
 
         /* signal handler blablabla */

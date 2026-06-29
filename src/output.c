@@ -60,6 +60,7 @@ void print_help(char *string)
     printf("                                          maximum = 3\n");
     printf("\n");
     printf("options for debugging purposes\n");
+    printf("  --no-startup-selftest  skip normal-mode startup self-test after separate validation\n");
     printf("  --timertest            test timer functions\n");
     printf("  --sleeptest            test sleep functions\n");
 }
