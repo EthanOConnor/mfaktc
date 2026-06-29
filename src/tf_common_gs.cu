@@ -42,6 +42,30 @@ extern "C" __host__ int tf_class_barrett79_gs(unsigned long long int k_min, unsi
 #elif defined TF_BARRETT_87BIT_GS
 extern "C" __host__ int tf_class_barrett87_gs(unsigned long long int k_min, unsigned long long int k_max, mystuff_t *mystuff)
 #define MFAKTC_FUNC mfaktc_barrett87_gs
+#ifdef MFAKTC_BARRETT87_GS_FIXED_SHIFTER_KERNEL
+#define MFAKTC_FUNC_FIXED_SHIFTER mfaktc_barrett87_gs_fixed_shifter
+#ifdef MFAKTC_BARRETT87_GS_FIXED_PROCESS_BITS
+#define MFAKTC_FIXED_SHIFTER_PROCESS_MATCH(MYSTUFF)                                                                  \
+    ((MYSTUFF)->gpu_sieve_processing_size == MFAKTC_BARRETT87_GS_FIXED_PROCESS_BITS)
+#define MFAKTC_FIXED_SHIFTER_PROCESS_ARG
+#else
+#define MFAKTC_FIXED_SHIFTER_PROCESS_MATCH(MYSTUFF) 1
+#define MFAKTC_FIXED_SHIFTER_PROCESS_ARG , mystuff->gpu_sieve_processing_size
+#endif
+#ifdef MFAKTC_BARRETT87_GS_FIXED_BPREINIT
+#define MFAKTC_FIXED_SHIFTER_BPREINIT_ARG
+#else
+#define MFAKTC_FIXED_SHIFTER_BPREINIT_ARG , b_preinit
+#endif
+#ifdef DEBUG_GPU_MATH
+#define MFAKTC_FIXED_SHIFTER_DEBUG_ARG , mystuff->d_modbasecase_debug
+#else
+#define MFAKTC_FIXED_SHIFTER_DEBUG_ARG
+#endif
+#endif
+#ifdef MFAKTC_BARRETT87_GS_BIT15_KERNEL
+#define MFAKTC_FUNC_BIT15 mfaktc_barrett87_gs_bit15
+#endif
 #elif defined TF_BARRETT_88BIT_GS
 extern "C" __host__ int tf_class_barrett88_gs(unsigned long long int k_min, unsigned long long int k_max, mystuff_t *mystuff)
 #define MFAKTC_FUNC mfaktc_barrett88_gs
@@ -133,7 +157,13 @@ extern "C" __host__ int tf_class_barrett92_gs(unsigned long long int k_min, unsi
     else
         shared_mem_required = 22; // 67894 primes expect 19.94%
 #endif
-    shared_mem_required = mystuff->gpu_sieve_processing_size * sizeof(int) * shared_mem_required / 100;
+    shared_mem_required = mystuff->gpu_sieve_processing_size *
+#ifdef MFAKTC_KDELTA_SMEM_U16
+                          sizeof(unsigned short) *
+#else
+                          sizeof(int) *
+#endif
+                          shared_mem_required / 100;
 
     // FIXME: can't use all the shared memory for GPU sieve, lets keep 1kiB spare...
     if (mystuff->verbosity >= 3) printf("shared_mem_required = %d bytes\n", shared_mem_required + 1024);
@@ -170,6 +200,31 @@ extern "C" __host__ int tf_class_barrett92_gs(unsigned long long int k_min, unsi
 
         // Now let the GPU trial factor the candidates that survived the sieving
 
+#ifdef MFAKTC_FUNC_FIXED_SHIFTER
+        if (mystuff->exponent == MFAKTC_BARRETT87_GS_FIXED_EXP &&
+            mystuff->bit_min - 63 == MFAKTC_BARRETT87_GS_FIXED_BIT_MAX64 &&
+            MFAKTC_FIXED_SHIFTER_PROCESS_MATCH(mystuff)) {
+            MFAKTC_FUNC_FIXED_SHIFTER<<<numblocks, THREADS_PER_BLOCK, shared_mem_required>>>(
+                k_base, mystuff->d_bitarray
+                MFAKTC_FIXED_SHIFTER_PROCESS_ARG
+                MFAKTC_FIXED_SHIFTER_BPREINIT_ARG,
+                mystuff->d_RES
+                MFAKTC_FIXED_SHIFTER_DEBUG_ARG
+            );
+        } else
+#endif
+#ifdef MFAKTC_FUNC_BIT15
+        if (mystuff->bit_min - 63 == 15) {
+            MFAKTC_FUNC_BIT15<<<numblocks, THREADS_PER_BLOCK, shared_mem_required>>>(
+                mystuff->exponent, k_base, mystuff->d_bitarray, mystuff->gpu_sieve_processing_size, shiftcount, b_preinit, mystuff->d_RES,
+                mystuff->bit_min - 63
+#ifdef DEBUG_GPU_MATH
+                ,
+                mystuff->d_modbasecase_debug
+#endif
+            );
+        } else
+#endif
         MFAKTC_FUNC<<<numblocks, THREADS_PER_BLOCK, shared_mem_required>>>(
             mystuff->exponent, k_base, mystuff->d_bitarray, mystuff->gpu_sieve_processing_size, shiftcount, b_preinit, mystuff->d_RES
 #if defined(TF_BARRETT) && \
@@ -243,4 +298,14 @@ extern "C" __host__ int tf_class_barrett92_gs(unsigned long long int k_min, unsi
     return factorsfound;
 }
 
+#ifdef MFAKTC_FUNC_BIT15
+#undef MFAKTC_FUNC_BIT15
+#endif
+#ifdef MFAKTC_FUNC_FIXED_SHIFTER
+#undef MFAKTC_FUNC_FIXED_SHIFTER
+#undef MFAKTC_FIXED_SHIFTER_PROCESS_MATCH
+#undef MFAKTC_FIXED_SHIFTER_PROCESS_ARG
+#undef MFAKTC_FIXED_SHIFTER_BPREINIT_ARG
+#undef MFAKTC_FIXED_SHIFTER_DEBUG_ARG
+#endif
 #undef MFAKTC_FUNC

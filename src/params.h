@@ -104,7 +104,14 @@ time. When it is increased too much you might run out of register space
 (especially on GPUs with compute capability 1.0 and 1.1)
 */
 
+#ifdef MFAKTC_THREADS_PER_BLOCK
+#define THREADS_PER_BLOCK MFAKTC_THREADS_PER_BLOCK
+#else
 #define THREADS_PER_BLOCK 256 /* DO NOT CHANGE! */
+#endif
+#if THREADS_PER_BLOCK < 32 || THREADS_PER_BLOCK > 1024 || (THREADS_PER_BLOCK % 32) != 0
+#error "THREADS_PER_BLOCK must be a warp-sized multiple between 32 and 1024"
+#endif
 
 /*
 SIEVE_PRIMES defines how far we sieve the factor candidates.
@@ -178,8 +185,12 @@ The following lines define the min, default and max value.
 
 #define GPU_SIEVE_PROCESS_SIZE_MIN           8 /* Processing 8 Kib in each block is minimum (256 threads * 1 word of 32 bits) */
 #define GPU_SIEVE_PROCESS_SIZE_DEFAULT      16 /* Default is processing 16 Kib */
+#ifdef MFAKTC_GPU_SIEVE_PROCESS_MAX64
+#define GPU_SIEVE_PROCESS_SIZE_MAX          64 /* Upper limit is 64K, since k deltas still fit in unsigned short. */
+#else
 #define GPU_SIEVE_PROCESS_SIZE_MAX          32 /* Upper limit is 64K, since we store k values as "short".
                                                   Not validated and shared memory might be an issue! */
+#endif
 // clang-format on
 
 #ifdef WAGSTAFF

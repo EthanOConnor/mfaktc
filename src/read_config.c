@@ -305,6 +305,13 @@ int read_config(mystuff_t *mystuff)
                           GPU_SIEVE_PROCESS_SIZE_MIN);
                 i = GPU_SIEVE_PROCESS_SIZE_MIN;
             }
+#if THREADS_PER_BLOCK > 256
+            if (i < 16) {
+                logprintf(mystuff, "Warning: THREADS_PER_BLOCK=%d requires GPUSieveProcessSize >= 16, using min value (16)\n",
+                          THREADS_PER_BLOCK);
+                i = 16;
+            }
+#endif
             if (mystuff->gpu_sieve_size % (i * 1024) != 0) {
                 logprintf(mystuff, "Warning: GPUSieveSize must be a multiple of GPUSieveProcessSize, using default value (%d)!\n",
                           GPU_SIEVE_PROCESS_SIZE_DEFAULT);

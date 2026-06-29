@@ -1,0 +1,73 @@
+mfaktc v0.24.1 (64-bit build)
+
+Compile-time options
+  THREADS_PER_BLOCK         256
+  SIEVE_SIZE_LIMIT          32 kiB
+  SIEVE_SIZE                193154 bits
+  SIEVE_SPLIT               250
+  MORE_CLASSES              enabled
+
+Runtime options
+  SievePrimes               25000
+  SievePrimesAdjust         1
+  SievePrimesMin            5000
+  SievePrimesMax            100000
+  NumStreams                3
+  CPUStreams                3
+  GridSize                  3
+  GPU sieving               enabled
+  GPUSievePrimes            82486
+  GPUSieveSize              2047 Mib
+  GPUSieveProcessSize       32 Kib
+  Checkpoints               disabled
+  CheckpointDelay           30 s
+  WorkFileAddDelay          600 s
+  Stages                    disabled
+  StopAfterFactor           bit level
+  PrintMode                 compact
+  Logging                   disabled
+  V5UserID                  (none)
+  ComputerID                (none)
+  AllowSleep                yes
+  LegacyResultsTxt          no
+  TimeStampInResults        no
+  TimestampOnSameLine       no
+
+CUDA version info
+  binary compiled for CUDA  13.3
+  CUDA runtime version      13.3
+  CUDA driver version       13.3
+
+CUDA device info
+  name                      NVIDIA GeForce RTX 3090
+  compute capability        8.6
+  max threads per block     1024
+  max shared memory per MP  102400 bytes
+  number of multiprocessors 82
+  clock rate (CUDA cores)   1800 MHz
+  memory clock rate:        9751 MHz
+  memory bus width:         384 bits
+
+Automatic parameters
+  threads per grid          671744
+  GPUSievePrimes (adjusted) 82486
+  GPUsieve minimum exponent 1055144
+
+running a simple self-test...
+Self-test statistics
+  number of tests           104
+  successful tests          104
+
+self-test PASSED!
+
+got assignment: exp=81144083 bit_min=78 bit_max=79 (754.42 GHz-days)
+Starting trial factoring M81144083 from 2^78 to 2^79 (754.42 GHz-days)
+ k_min =  1862313576848340
+ k_max =  3724627153697174
+Using GPU kernel "barrett87_mul32_gs"
+Date    Time | class   Pct |   time     ETA | GHz-d/day    Sieve     Wait
+Jun 29 10:14 |    0   0.1% | 10.198   2h43m |   6657.95    82485    n.a.%Jun 29 10:14 |    1   0.2% | 10.219   2h43m |   6644.27    82485    n.a.%Jun 29 10:14 |   12   0.3% | 10.306   2h44m |   6588.18    82485    n.a.%Jun 29 10:14 |   13   0.4% | 10.372   2h45m |   6546.26    82485    n.a.%Jun 29 10:15 |   16   0.5% | 10.427   2h45m |   6511.73    82485    n.a.%Jun 29 10:15 |   21   0.6% | 10.475   2h46m |   6481.89    82485    n.a.%Jun 29 10:15 |   28   0.7% | 10.496   2h46m |   6468.92    82485    n.a.%Jun 29 10:15 |   33   0.8% | 10.560   2h47m |   6429.71    82485    n.a.%Jun 29 10:15 |   37   0.9% | 10.568   2h47m |   6424.84    82485    n.a.%Jun 29 10:16 |   40   1.0% | 10.575   2h47m |   6420.59    82485    n.a.%Jun 29 10:16 |   45   1.1% | 10.591   2h47m |   6410.89    82485    n.a.%Jun 29 10:16 |   48   1.2% | 10.607   2h47m |   6401.22    82485    n.a.%Jun 29 10:16 |   52   1.4% | 10.613   2h47m |   6397.60    82485    n.a.%Jun 29 10:16 |   57   1.5% | 10.627   2h47m |   6389.17    82485    n.a.%Jun 29 10:16 |   61   1.6% | 10.664   2h47m |   6367.01    82485    n.a.%Jun 29 10:17 |   72   1.7% | 10.681   2h48m |   6356.87    82485    n.a.%Jun 29 10:17 |   73   1.8% | 10.684   2h47m |   6355.09    82485    n.a.%Jun 29 10:17 |   76   1.9% | 10.687   2h47m |   6353.30    82485    n.a.%Jun 29 10:17 |   85   2.0% | 10.690   2h47m |   6351.52    82485    n.a.%Jun 29 10:17 |   93   2.1% | 10.689   2h47m |   6352.12    82485    n.a.%Jun 29 10:17 |   96   2.2% | 10.691   2h47m |   6350.93    82485    n.a.%Jun 29 10:18 |   97   2.3% | 10.691   2h47m |   6350.93    82485    n.a.%
+received signal "SIGTERM"
+mfaktc will exit once the current class is finished.
+press ^C again to exit immediately
+Jun 29 10:18 |  100   2.4% | 10.695   2h47m |   6348.55    82485    n.a.%

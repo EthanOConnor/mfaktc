@@ -1,0 +1,2 @@
+timestamp, power.draw [W], power.limit [W], clocks.current.graphics [MHz], clocks.current.memory [MHz], temperature.gpu, fan.speed [%], clocks_event_reasons.active, clocks_event_reasons.hw_slowdown, clocks_event_reasons.sw_power_cap
+2026/06/29 10:15:11.751, 415.20 W, 420.00 W, 1845 MHz, 9501 MHz, 67, 59 %, 0x0000000000000004, Not Active, Active

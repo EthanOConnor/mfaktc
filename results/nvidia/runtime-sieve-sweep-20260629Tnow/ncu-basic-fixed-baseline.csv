@@ -1,0 +1,65 @@
+==PROF== Connected to process 200425 (/home/ethan/trialFactoring/reference/mfaktc/mfaktc)
+==ERROR== ERR_NVGPUCTRPERM - The user does not have permission to access NVIDIA GPU Performance Counters on the target device 0. For instructions on enabling permissions and to get more information see https://developer.nvidia.com/ERR_NVGPUCTRPERM
+mfaktc v0.24.1 (64-bit build)
+
+Compile-time options
+  THREADS_PER_BLOCK         512
+  SIEVE_SIZE_LIMIT          32 kiB
+  SIEVE_SIZE                193154 bits
+  SIEVE_SPLIT               250
+  MORE_CLASSES              enabled
+
+Runtime options
+  SievePrimes               25000
+  SievePrimesAdjust         1
+  SievePrimesMin            5000
+  SievePrimesMax            100000
+  NumStreams                3
+  CPUStreams                3
+  GridSize                  3
+  GPU sieving               enabled
+  GPUSievePrimes            82486
+  GPUSieveSize              2046 Mib
+  GPUSieveProcessSize       48 Kib
+  Checkpoints               disabled
+  CheckpointDelay           30 s
+  WorkFileAddDelay          600 s
+  Stages                    disabled
+  StopAfterFactor           bit level
+  PrintMode                 compact
+  Logging                   disabled
+  V5UserID                  (none)
+  ComputerID                (none)
+  AllowSleep                yes
+  LegacyResultsTxt          no
+  TimeStampInResults        no
+  TimestampOnSameLine       no
+
+CUDA version info
+  binary compiled for CUDA  13.3
+  CUDA runtime version      13.3
+  CUDA driver version       13.3
+
+CUDA device info
+  name                      NVIDIA GeForce RTX 3090
+  compute capability        8.6
+  max threads per block     1024
+  max shared memory per MP  102400 bytes
+  number of multiprocessors 82
+  clock rate (CUDA cores)   1800 MHz
+  memory clock rate:        9751 MHz
+  memory bus width:         384 bits
+
+Automatic parameters
+  threads per grid          671744
+  GPUSievePrimes (adjusted) 82450
+  GPUsieve minimum exponent 1054584
+
+startup self-test skipped by --no-startup-selftest
+got assignment: exp=81144083 bit_min=78 bit_max=79 (754.42 GHz-days)
+Starting trial factoring M81144083 from 2^78 to 2^79 (754.42 GHz-days)
+ k_min =  1862313576848340
+ k_max =  3724627153697174
+Using GPU kernel "barrett87_mul32_gs"
+Date    Time | class   Pct |   time     ETA | GHz-d/day    Sieve     Wait
+Jun 29 04:47 |    0   0.1% |  9.260   2h28m |   7332.37    82449    n.a.%Jun 29 04:47 |    1   0.2% |  9.327   2h28m |   7279.70    82449    n.a.%Jun 29 04:47 |   12   0.3% |  9.385   2h29m |   7234.71    82449    n.a.%Jun 29 04:47 |   13   0.4% |  9.411   2h29m |   7214.72    82449    n.a.%Jun 29 04:47 |   16   0.5% |  9.458   2h30m |   7178.87    82449    n.a.%Jun 29 04:48 |   21   0.6% |  9.499   2h31m |   7147.89    82449    n.a.%Jun 29 04:48 |   28   0.7% |  9.512   2h31m |   7138.12    82449    n.a.%Jun 29 04:48 |   33   0.8% |  9.562   2h31m |   7100.79    82449    n.a.%Jun 29 04:48 |   37   0.9% |  9.573   2h31m |   7092.63    82449    n.a.%Jun 29 04:48 |   40   1.0% |  9.586   2h31m |   7083.01    82449    n.a.%Jun 29 04:48 |   45   1.1% |  9.592   2h31m |   7078.58    82449    n.a.%Jun 29 04:49 |   48   1.2% |  9.596   2h31m |   7075.63    82449    n.a.%Jun 29 04:49 |   52   1.4% |  9.596   2h31m |   7075.63    82449    n.a.%Jun 29 04:49 |   57   1.5% |  9.607   2h31m |   7067.53    82449    n.a.%Jun 29 04:49 |   61   1.6% |  9.603   2h31m |   7070.47    82449    n.a.%Jun 29 04:49 |   72   1.7% |  9.605   2h31m |   7069.00    82449    n.a.%Jun 29 04:49 |   73   1.8% |  9.622   2h31m |   7056.51    82449    n.a.%Jun 29 04:49 |   76   1.9% |  9.611   2h30m |   7064.59    82449    n.a.%Jun 29 04:50 |   85   2.0% |  9.646   2h31m |   7038.96    82449    n.a.%Jun 29 04:50 |   93   2.1% |  9.663   2h31m |   7026.57    82449    n.a.%Jun 29 04:50 |   96   2.2% |  9.659   2h31m |   7029.48    82449    n.a.%Jun 29 04:50 |   97   2.3% |  9.661   2h31m |   7028.03    82449    n.a.%Jun 29 04:50 |  100   2.4% |  9.665   2h30m |   7025.12    82449    n.a.%Jun 29 04:50 |  105   2.5% |  9.665   2h30m |   7025.12    82449    n.a.%Jun 29 04:51 |  108   2.6% |  9.665   2h30m |   7025.12    82449    n.a.%Jun 29 04:51 |  112   2.7% |  9.668   2h30m |   7022.94    82449    n.a.%Jun 29 04:51 |  117   2.8% |  9.664   2h30m |   7025.84    82449    n.a.%Jun 29 04:51 |  120   2.9% |  9.667   2h30m |   7023.66    82449    n.a.%Jun 29 04:51 |  121   3.0% |  9.667   2h30m |   7023.66    82449    n.a.%Jun 29 04:51 |  132   3.1% |  9.666   2h29m |   7024.39    82449    n.a.%Jun 29 04:52 |  133   3.2% |  9.665   2h29m |   7025.12    82449    n.a.%Jun 29 04:52 |  136   3.3% |  9.669   2h29m |   7022.21    82449    n.a.%Jun 29 04:52 |  141   3.4% |  9.666   2h29m |   7024.39    82449    n.a.%Jun 29 04:52 |  145   3.5% |  9.669   2h29m |   7022.21    82449    n.a.%Jun 29 04:52 |  148   3.6% |  9.673   2h29m |   7019.31    82449    n.a.%==PROF== Trying to shutdown target application
