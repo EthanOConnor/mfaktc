@@ -257,6 +257,22 @@ exponent and bit class match the compile-time constants below.
     (void)shiftcount;
     (void)bit_max64;
 
+#ifdef MFAKTC_BARRETT87_GS_FIXED_BPREINIT
+    int192 fixed_b_preinit;
+#define MFAKTC_FIXED_BPREINIT_WORD_VALUE(WORD)                                                                        \
+    ((MFAKTC_BARRETT87_GS_FIXED_BPREINIT_WORD == (WORD)) ?                                                            \
+         (unsigned int)(MFAKTC_BARRETT87_GS_FIXED_BPREINIT_VALUE) :                                                    \
+         0U)
+    fixed_b_preinit.d0 = MFAKTC_FIXED_BPREINIT_WORD_VALUE(0);
+    fixed_b_preinit.d1 = MFAKTC_FIXED_BPREINIT_WORD_VALUE(1);
+    fixed_b_preinit.d2 = MFAKTC_FIXED_BPREINIT_WORD_VALUE(2);
+    fixed_b_preinit.d3 = MFAKTC_FIXED_BPREINIT_WORD_VALUE(3);
+    fixed_b_preinit.d4 = MFAKTC_FIXED_BPREINIT_WORD_VALUE(4);
+    fixed_b_preinit.d5 = MFAKTC_FIXED_BPREINIT_WORD_VALUE(5);
+#undef MFAKTC_FIXED_BPREINIT_WORD_VALUE
+    (void)b_preinit;
+#endif
+
     create_k_deltas(bit_array, bits_to_process, &total_bit_count, k_deltas);
     create_fbase96(&f_base, k_base, fixed_exp, bits_to_process);
 
@@ -268,7 +284,13 @@ exponent and bit class match the compile-time constants below.
         f.d2 = __addc(f_base.d2, 0);
 
         test_FC96_barrett87_fixed_shifter<MFAKTC_BARRETT87_GS_FIXED_BIT_MAX64, MFAKTC_BARRETT87_GS_FIXED_SHIFTER>(
-            f, b_preinit, RES
+            f,
+#ifdef MFAKTC_BARRETT87_GS_FIXED_BPREINIT
+            fixed_b_preinit,
+#else
+            b_preinit,
+#endif
+            RES
 #ifdef DEBUG_GPU_MATH
             ,
             modbasecase_debug
