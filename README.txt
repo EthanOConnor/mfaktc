@@ -370,6 +370,12 @@ Submitting results:
 You can find additional settings in the mfaktc.ini file. Read it carefully
 before making changes. ;-)
 
+When optimizing performance in this repository, treat algorithmic, kernel,
+build, and other software-side changes as the primary scope. Hardware controls
+such as power limits, clock locks, fan curves, target temperatures, and similar
+frequency or power tuning are a separate optimization track and should be
+measured and discussed independently.
+
 
 #########
 # 7 FAQ #
