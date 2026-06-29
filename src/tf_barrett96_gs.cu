@@ -185,6 +185,51 @@ bit_max64 is the number of bits in the factor (minus 64)
     }
 }
 
+#ifdef MFAKTC_BARRETT87_GS_BIT15_KERNEL
+__global__ void
+#ifndef DEBUG_GPU_MATH
+__launch_bounds__(THREADS_PER_BLOCK, KERNEL_MIN_BLOCKS)
+    mfaktc_barrett87_gs_bit15(unsigned int exp, int96 k_base, unsigned int *bit_array, unsigned int bits_to_process, int shiftcount,
+                              int192 b_preinit, unsigned int *RES, int bit_max64)
+#else
+__launch_bounds__(THREADS_PER_BLOCK, KERNEL_MIN_BLOCKS)
+    mfaktc_barrett87_gs_bit15(unsigned int exp, int96 k_base, unsigned int *bit_array, unsigned int bits_to_process, int shiftcount,
+                              int192 b_preinit, unsigned int *RES, int bit_max64, unsigned int *modbasecase_debug)
+#endif
+/*
+Specialized Barrett87 GPU-sieve kernel for bit levels where bit_max64 is 15.
+The host dispatch in tf_common_gs.cu only launches this kernel for that exact
+bit level, preserving the generic kernel for all other Barrett87 assignments.
+*/
+{
+    int96 f, f_base;
+    int i, initial_shifter_value, total_bit_count, k_delta;
+    extern __shared__ unsigned short k_deltas[];
+
+    (void)bit_max64;
+
+    create_k_deltas(bit_array, bits_to_process, &total_bit_count, k_deltas);
+    create_fbase96(&f_base, k_base, exp, bits_to_process);
+
+    initial_shifter_value = exp << (32 - shiftcount);
+
+    for (i = threadIdx.x; i < total_bit_count; i += THREADS_PER_BLOCK) {
+        k_delta = k_deltas[i];
+
+        f.d0 = __add_cc(f_base.d0, __umul32(2 * k_delta * NUM_CLASSES, exp));
+        f.d1 = __addc_cc(f_base.d1, __umul32hi(2 * k_delta * NUM_CLASSES, exp));
+        f.d2 = __addc(f_base.d2, 0);
+
+        test_FC96_barrett87_impl<15>(f, b_preinit, initial_shifter_value, RES, 15
+#ifdef DEBUG_GPU_MATH
+                                     ,
+                                     modbasecase_debug
+#endif
+        );
+    }
+}
+#endif
+
 __global__ void
 #ifndef DEBUG_GPU_MATH
 __launch_bounds__(THREADS_PER_BLOCK, KERNEL_MIN_BLOCKS)
