@@ -462,6 +462,13 @@ __device__ static __forceinline__ void test_FC96_barrett87_fixed_shifter(int96 f
     float ff;
     const int bit_max64 = FIXED_BIT_MAX64;
 
+#ifdef MFAKTC_BARRETT87_GS_FIXED_INITIAL_REDUCTION
+#if MFAKTC_BARRETT87_GS_FIXED_INITIAL_A_SHIFT < 0 || MFAKTC_BARRETT87_GS_FIXED_INITIAL_A_SHIFT > 95
+#error MFAKTC_BARRETT87_GS_FIXED_INITIAL_A_SHIFT must be in [0, 95]
+#endif
+#define MFAKTC_BARRETT87_GS_FIXED_INITIAL_U_RSHIFT (96 - MFAKTC_BARRETT87_GS_FIXED_INITIAL_A_SHIFT)
+#endif
+
     trace_96_textmsg(__FILE__, __LINE__, f, "--- barrett87 fixed-shifter start ---");
     ff = __uint2float_rn(f.d2);
     ff = ff * 4294967296.0f + __uint2float_rn(f.d1);
@@ -481,6 +488,38 @@ __device__ static __forceinline__ void test_FC96_barrett87_fixed_shifter(int96 f
 #endif
     trace_96_96(__FILE__, __LINE__, f, "u", u);
 
+#ifdef MFAKTC_BARRETT87_GS_FIXED_INITIAL_REDUCTION
+#if MFAKTC_BARRETT87_GS_FIXED_INITIAL_U_RSHIFT == 0
+    a.d0 = u.d0;
+    a.d1 = u.d1;
+    a.d2 = u.d2;
+#elif MFAKTC_BARRETT87_GS_FIXED_INITIAL_U_RSHIFT < 32
+    a.d0 = __fshift_r(u.d0, u.d1, MFAKTC_BARRETT87_GS_FIXED_INITIAL_U_RSHIFT);
+    a.d1 = __fshift_r(u.d1, u.d2, MFAKTC_BARRETT87_GS_FIXED_INITIAL_U_RSHIFT);
+    a.d2 = u.d2 >> MFAKTC_BARRETT87_GS_FIXED_INITIAL_U_RSHIFT;
+#elif MFAKTC_BARRETT87_GS_FIXED_INITIAL_U_RSHIFT == 32
+    a.d0 = u.d1;
+    a.d1 = u.d2;
+    a.d2 = 0;
+#elif MFAKTC_BARRETT87_GS_FIXED_INITIAL_U_RSHIFT < 64
+    a.d0 = __fshift_r(u.d1, u.d2, MFAKTC_BARRETT87_GS_FIXED_INITIAL_U_RSHIFT - 32);
+    a.d1 = u.d2 >> (MFAKTC_BARRETT87_GS_FIXED_INITIAL_U_RSHIFT - 32);
+    a.d2 = 0;
+#elif MFAKTC_BARRETT87_GS_FIXED_INITIAL_U_RSHIFT == 64
+    a.d0 = u.d2;
+    a.d1 = 0;
+    a.d2 = 0;
+#elif MFAKTC_BARRETT87_GS_FIXED_INITIAL_U_RSHIFT < 96
+    a.d0 = u.d2 >> (MFAKTC_BARRETT87_GS_FIXED_INITIAL_U_RSHIFT - 64);
+    a.d1 = 0;
+    a.d2 = 0;
+#else
+    a.d0 = 0;
+    a.d1 = 0;
+    a.d2 = 0;
+#endif
+    trace_96_96(__FILE__, __LINE__, f, "a", a);
+#else
     a.d0 = __fshift_r(b.d2, b.d3, bit_max64 - 1);
     a.d1 = __fshift_r(b.d3, b.d4, bit_max64 - 1);
     a.d2 = __fshift_r(b.d4, b.d5, bit_max64 - 1);
@@ -492,6 +531,7 @@ __device__ static __forceinline__ void test_FC96_barrett87_fixed_shifter(int96 f
     a.d1 = tmp192.d4;
     a.d2 = tmp192.d5;
     trace_96_96(__FILE__, __LINE__, f, "a", a);
+#endif
 
     mul_96(&tmp96, a, f);
     trace_96_96(__FILE__, __LINE__, f, "tmp96", tmp96);
@@ -502,6 +542,10 @@ __device__ static __forceinline__ void test_FC96_barrett87_fixed_shifter(int96 f
     a.d2 = __subc(   b.d2, tmp96.d2);
     // clang-format on
     trace_96_96(__FILE__, __LINE__, f, "a", a);
+
+#ifdef MFAKTC_BARRETT87_GS_FIXED_INITIAL_REDUCTION
+#undef MFAKTC_BARRETT87_GS_FIXED_INITIAL_U_RSHIFT
+#endif
 
 #define BARRETT87_FIXED_SHIFTER_STEP(STEP)                                                                            \
     if ((FIXED_SHIFTER << (STEP)) != 0U) {                                                                            \
