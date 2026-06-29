@@ -1,0 +1,67 @@
+mfaktc v0.24.1 (64-bit build)
+
+Compile-time options
+  THREADS_PER_BLOCK         256
+  SIEVE_SIZE_LIMIT          32 kiB
+  SIEVE_SIZE                193154 bits
+  SIEVE_SPLIT               250
+  MORE_CLASSES              enabled
+
+Runtime options
+  SievePrimes               25000
+  SievePrimesAdjust         1
+  SievePrimesMin            5000
+  SievePrimesMax            100000
+  NumStreams                3
+  CPUStreams                3
+  GridSize                  3
+  GPU sieving               enabled
+  GPUSievePrimes            82486
+  GPUSieveSize              256 Mib
+  GPUSieveProcessSize       16 Kib
+  Checkpoints               disabled
+  CheckpointDelay           30 s
+  WorkFileAddDelay          600 s
+  Stages                    disabled
+  StopAfterFactor           bit level
+  PrintMode                 compact
+  Logging                   disabled
+  V5UserID                  (none)
+  ComputerID                (none)
+  AllowSleep                yes
+  LegacyResultsTxt          no
+  TimeStampInResults        no
+  TimestampOnSameLine       no
+
+CUDA version info
+  binary compiled for CUDA  13.3
+  CUDA runtime version      13.3
+  CUDA driver version       13.3
+
+CUDA device info
+  name                      NVIDIA GeForce RTX 3090
+  compute capability        8.6
+  max threads per block     1024
+  max shared memory per MP  102400 bytes
+  number of multiprocessors 82
+  clock rate (CUDA cores)   1800 MHz
+  memory clock rate:        9751 MHz
+  memory bus width:         384 bits
+
+Automatic parameters
+  threads per grid          671744
+  GPUSievePrimes (adjusted) 82486
+  GPUsieve minimum exponent 1055144
+
+startup self-test skipped by --no-startup-selftest
+got assignment: exp=81144083 bit_min=78 bit_max=79 (754.42 GHz-days)
+Starting trial factoring M81144083 from 2^78 to 2^79 (754.42 GHz-days)
+ k_min =  1862313576848340
+ k_max =  3724627153697174
+Using GPU kernel "barrett87_mul32_gs"
+Date    Time | class   Pct |   time     ETA | GHz-d/day    Sieve     Wait
+Jun 29 01:16 |    0   0.1% |  9.880   2h37m |   6872.24    82485    n.a.%Jun 29 01:16 |    1   0.2% |  9.961   2h39m |   6816.36    82485    n.a.%Jun 29 01:17 |   12   0.3% | 10.002   2h39m |   6788.42    82485    n.a.%Jun 29 01:17 |   13   0.4% | 10.061   2h40m |   6748.61    82485    n.a.%Jun 29 01:17 |   16   0.5% | 10.094   2h40m |   6726.55    82485    n.a.%Jun 29 01:17 |   21   0.6% | 10.171   2h41m |   6675.62    82485    n.a.%Jun 29 01:17 |   28   0.7% | 10.190   2h41m |   6663.18    82485    n.a.%Jun 29 01:17 |   33   0.8% | 10.208   2h41m |   6651.43    82485    n.a.%Jun 29 01:18 |   37   0.9% | 10.236   2h42m |   6633.23    82485    n.a.%
+received signal "SIGINT"
+mfaktc will exit once the current class is finished.
+press ^C again to exit immediately
+Jun 29 01:18 |   40   1.0% | 10.257   2h42m |   6619.65    82485    n.a.%

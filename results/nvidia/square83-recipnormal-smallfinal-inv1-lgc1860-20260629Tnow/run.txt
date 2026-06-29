@@ -1,0 +1,63 @@
+mfaktc v0.24.1 (64-bit build)
+
+Compile-time options
+  THREADS_PER_BLOCK         512
+  SIEVE_SIZE_LIMIT          32 kiB
+  SIEVE_SIZE                193154 bits
+  SIEVE_SPLIT               250
+  MORE_CLASSES              enabled
+
+Runtime options
+  SievePrimes               25000
+  SievePrimesAdjust         1
+  SievePrimesMin            5000
+  SievePrimesMax            100000
+  NumStreams                3
+  CPUStreams                3
+  GridSize                  3
+  GPU sieving               enabled
+  GPUSievePrimes            82486
+  GPUSieveSize              2046 Mib
+  GPUSieveProcessSize       48 Kib
+  Checkpoints               disabled
+  CheckpointDelay           30 s
+  WorkFileAddDelay          600 s
+  Stages                    disabled
+  StopAfterFactor           bit level
+  PrintMode                 compact
+  Logging                   disabled
+  V5UserID                  (none)
+  ComputerID                (none)
+  AllowSleep                yes
+  LegacyResultsTxt          no
+  TimeStampInResults        no
+  TimestampOnSameLine       no
+
+CUDA version info
+  binary compiled for CUDA  13.3
+  CUDA runtime version      13.3
+  CUDA driver version       13.3
+
+CUDA device info
+  name                      NVIDIA GeForce RTX 3090
+  compute capability        8.6
+  max threads per block     1024
+  max shared memory per MP  102400 bytes
+  number of multiprocessors 82
+  clock rate (CUDA cores)   1800 MHz
+  memory clock rate:        9751 MHz
+  memory bus width:         384 bits
+
+Automatic parameters
+  threads per grid          671744
+  GPUSievePrimes (adjusted) 82450
+  GPUsieve minimum exponent 1054584
+
+startup self-test skipped by --no-startup-selftest
+got assignment: exp=81144083 bit_min=78 bit_max=79 (754.42 GHz-days)
+Starting trial factoring M81144083 from 2^78 to 2^79 (754.42 GHz-days)
+ k_min =  1862313576848340
+ k_max =  3724627153697174
+Using GPU kernel "barrett87_mul32_gs"
+Date    Time | class   Pct |   time     ETA | GHz-d/day    Sieve     Wait
+Jun 29 09:53 |    0   0.1% |  9.038   2h24m |   7512.48    82449    n.a.%Jun 29 09:53 |    1   0.2% |  9.043   2h24m |   7508.32    82449    n.a.%Jun 29 09:53 |   12   0.3% |  9.082   2h24m |   7476.08    82449    n.a.%Jun 29 09:53 |   13   0.4% |  9.137   2h25m |   7431.08    82449    n.a.%Jun 29 09:53 |   16   0.5% |  9.155   2h25m |   7416.47    82449    n.a.%Jun 29 09:54 |   21   0.6% |  9.230   2h26m |   7356.20    82449    n.a.%Jun 29 09:54 |   28   0.7% |  9.254   2h26m |   7337.13    82449    n.a.%Jun 29 09:54 |   33   0.8% |  9.276   2h27m |   7319.72    82449    n.a.%Jun 29 09:54 |   37   0.9% |  9.283   2h27m |   7314.20    82449    n.a.%Jun 29 09:54 |   40   1.0% |  9.324   2h27m |   7282.04    82449    n.a.%Jun 29 09:54 |   45   1.1% |  9.335   2h27m |   7273.46    82449    n.a.%Jun 29 09:54 |   48   1.2% |  9.341   2h27m |   7268.79    82449    n.a.%Jun 29 09:55 |   52   1.4% |  9.348   2h27m |   7263.35    82449    n.a.%Jun 29 09:55 |   57   1.5% |  9.346   2h27m |   7264.90    82449    n.a.%
