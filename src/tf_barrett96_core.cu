@@ -281,14 +281,16 @@ __device__ static void test_FC96_barrett88(int96 f, int192 b, unsigned int shift
         mod_simple_96_and_check_big_factor96(a, f, ff, RES);
 }
 
-__device__ static void test_FC96_barrett87(int96 f, int192 b, unsigned int shifter, unsigned int *RES, int bit_max64
+template <int FIXED_BIT_MAX64>
+__device__ static __forceinline__ void test_FC96_barrett87_impl(int96 f, int192 b, unsigned int shifter, unsigned int *RES,
+                                                                int bit_max64_runtime
 #ifdef CPU_SIEVE
-                                           ,
-                                           int shiftcount
+                                                                ,
+                                                                int shiftcount
 #endif
 #ifdef DEBUG_GPU_MATH
-                                           ,
-                                           unsigned int *modbasecase_debug
+                                                                ,
+                                                                unsigned int *modbasecase_debug
 #endif
 )
 {
@@ -296,6 +298,7 @@ __device__ static void test_FC96_barrett87(int96 f, int192 b, unsigned int shift
     int192 tmp192;
     int96 tmp96;
     float ff;
+    const int bit_max64 = FIXED_BIT_MAX64 ? FIXED_BIT_MAX64 : bit_max64_runtime;
 
     trace_96_textmsg(__FILE__, __LINE__, f, "--- barrett87 start ---");
     /* ff = f as float, needed in mod_192_96().
@@ -404,6 +407,44 @@ this kernel has a lower FC limit of 2^64 so we can use [mod_simple_96_and_]check
 mod_simple_96_and_check_big_factor96() includes the final adjustment, too. The code above may
 produce an a that is too large by up to 11 times f. */
     mod_simple_96_and_check_big_factor96(a, f, ff, RES);
+}
+
+__device__ static void test_FC96_barrett87(int96 f, int192 b, unsigned int shifter, unsigned int *RES, int bit_max64
+#ifdef CPU_SIEVE
+                                           ,
+                                           int shiftcount
+#endif
+#ifdef DEBUG_GPU_MATH
+                                           ,
+                                           unsigned int *modbasecase_debug
+#endif
+)
+{
+#ifdef MFAKTC_BARRETT87_BIT15_SPECIAL
+    if (bit_max64 == 15) {
+        test_FC96_barrett87_impl<15>(f, b, shifter, RES, bit_max64
+#ifdef CPU_SIEVE
+                                     ,
+                                     shiftcount
+#endif
+#ifdef DEBUG_GPU_MATH
+                                     ,
+                                     modbasecase_debug
+#endif
+        );
+        return;
+    }
+#endif
+    test_FC96_barrett87_impl<0>(f, b, shifter, RES, bit_max64
+#ifdef CPU_SIEVE
+                                ,
+                                shiftcount
+#endif
+#ifdef DEBUG_GPU_MATH
+                                ,
+                                modbasecase_debug
+#endif
+    );
 }
 
 __device__ static void test_FC96_barrett79(int96 f, int192 b, unsigned int shifter, unsigned int *RES

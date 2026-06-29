@@ -19,6 +19,10 @@ MUL96_PTX ?= 0
 ifeq ($(MUL96_PTX),1)
 NVCCFLAGS += -DMFAKTC_FORCE_MUL96_PTX
 endif
+BARRETT87_BIT15 ?= 0
+ifeq ($(BARRETT87_BIT15),1)
+NVCCFLAGS += -DMFAKTC_BARRETT87_BIT15_SPECIAL
+endif
 
 # generate code for compute capabilities - see this table for supported
 # versions: https://en.wikipedia.org/wiki/CUDA#GPUs_supported
