@@ -47,8 +47,20 @@ extern "C" __host__ int tf_class_barrett87_gs(unsigned long long int k_min, unsi
 #ifdef MFAKTC_BARRETT87_GS_FIXED_PROCESS_BITS
 #define MFAKTC_FIXED_SHIFTER_PROCESS_MATCH(MYSTUFF)                                                                  \
     ((MYSTUFF)->gpu_sieve_processing_size == MFAKTC_BARRETT87_GS_FIXED_PROCESS_BITS)
+#define MFAKTC_FIXED_SHIFTER_PROCESS_ARG
 #else
 #define MFAKTC_FIXED_SHIFTER_PROCESS_MATCH(MYSTUFF) 1
+#define MFAKTC_FIXED_SHIFTER_PROCESS_ARG , mystuff->gpu_sieve_processing_size
+#endif
+#ifdef MFAKTC_BARRETT87_GS_FIXED_BPREINIT
+#define MFAKTC_FIXED_SHIFTER_BPREINIT_ARG
+#else
+#define MFAKTC_FIXED_SHIFTER_BPREINIT_ARG , b_preinit
+#endif
+#ifdef DEBUG_GPU_MATH
+#define MFAKTC_FIXED_SHIFTER_DEBUG_ARG , mystuff->d_modbasecase_debug
+#else
+#define MFAKTC_FIXED_SHIFTER_DEBUG_ARG
 #endif
 #endif
 #ifdef MFAKTC_BARRETT87_GS_BIT15_KERNEL
@@ -193,12 +205,11 @@ extern "C" __host__ int tf_class_barrett92_gs(unsigned long long int k_min, unsi
             mystuff->bit_min - 63 == MFAKTC_BARRETT87_GS_FIXED_BIT_MAX64 &&
             MFAKTC_FIXED_SHIFTER_PROCESS_MATCH(mystuff)) {
             MFAKTC_FUNC_FIXED_SHIFTER<<<numblocks, THREADS_PER_BLOCK, shared_mem_required>>>(
-                mystuff->exponent, k_base, mystuff->d_bitarray, mystuff->gpu_sieve_processing_size, shiftcount, b_preinit, mystuff->d_RES,
-                mystuff->bit_min - 63
-#ifdef DEBUG_GPU_MATH
-                ,
-                mystuff->d_modbasecase_debug
-#endif
+                k_base, mystuff->d_bitarray
+                MFAKTC_FIXED_SHIFTER_PROCESS_ARG
+                MFAKTC_FIXED_SHIFTER_BPREINIT_ARG,
+                mystuff->d_RES
+                MFAKTC_FIXED_SHIFTER_DEBUG_ARG
             );
         } else
 #endif
@@ -293,5 +304,8 @@ extern "C" __host__ int tf_class_barrett92_gs(unsigned long long int k_min, unsi
 #ifdef MFAKTC_FUNC_FIXED_SHIFTER
 #undef MFAKTC_FUNC_FIXED_SHIFTER
 #undef MFAKTC_FIXED_SHIFTER_PROCESS_MATCH
+#undef MFAKTC_FIXED_SHIFTER_PROCESS_ARG
+#undef MFAKTC_FIXED_SHIFTER_BPREINIT_ARG
+#undef MFAKTC_FIXED_SHIFTER_DEBUG_ARG
 #endif
 #undef MFAKTC_FUNC

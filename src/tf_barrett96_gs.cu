@@ -231,17 +231,29 @@ bit level, preserving the generic kernel for all other Barrett87 assignments.
 #endif
 
 #ifdef MFAKTC_BARRETT87_GS_FIXED_SHIFTER_KERNEL
-__global__ void
-#ifndef DEBUG_GPU_MATH
-__launch_bounds__(THREADS_PER_BLOCK, KERNEL_MIN_BLOCKS)
-    mfaktc_barrett87_gs_fixed_shifter(unsigned int exp, int96 k_base, unsigned int *bit_array, unsigned int bits_to_process,
-                                      int shiftcount, int192 b_preinit, unsigned int *RES, int bit_max64)
+#ifdef MFAKTC_BARRETT87_GS_FIXED_PROCESS_BITS
+#define MFAKTC_FIXED_PROCESS_PARAM
 #else
-__launch_bounds__(THREADS_PER_BLOCK, KERNEL_MIN_BLOCKS)
-    mfaktc_barrett87_gs_fixed_shifter(unsigned int exp, int96 k_base, unsigned int *bit_array, unsigned int bits_to_process,
-                                      int shiftcount, int192 b_preinit, unsigned int *RES, int bit_max64,
-                                      unsigned int *modbasecase_debug)
+#define MFAKTC_FIXED_PROCESS_PARAM , unsigned int bits_to_process
 #endif
+#ifdef MFAKTC_BARRETT87_GS_FIXED_BPREINIT
+#define MFAKTC_FIXED_BPREINIT_PARAM
+#else
+#define MFAKTC_FIXED_BPREINIT_PARAM , int192 b_preinit
+#endif
+#ifdef DEBUG_GPU_MATH
+#define MFAKTC_FIXED_DEBUG_PARAM , unsigned int *modbasecase_debug
+#else
+#define MFAKTC_FIXED_DEBUG_PARAM
+#endif
+
+__global__ void
+__launch_bounds__(THREADS_PER_BLOCK, KERNEL_MIN_BLOCKS)
+    mfaktc_barrett87_gs_fixed_shifter(int96 k_base, unsigned int *bit_array
+                                      MFAKTC_FIXED_PROCESS_PARAM
+                                      MFAKTC_FIXED_BPREINIT_PARAM,
+                                      unsigned int *RES
+                                      MFAKTC_FIXED_DEBUG_PARAM)
 /*
 Specialized Barrett87 GPU-sieve kernel for one fixed exponent and bit class.
 The host dispatch in tf_common_gs.cu only launches this kernel when runtime
@@ -252,13 +264,6 @@ exponent and bit class match the compile-time constants below.
     int i, total_bit_count, k_delta;
     const unsigned int fixed_exp = MFAKTC_BARRETT87_GS_FIXED_EXP;
     extern __shared__ unsigned short k_deltas[];
-
-    (void)exp;
-    (void)shiftcount;
-    (void)bit_max64;
-#ifdef MFAKTC_BARRETT87_GS_FIXED_PROCESS_BITS
-    (void)bits_to_process;
-#endif
 
 #ifdef MFAKTC_BARRETT87_GS_FIXED_BPREINIT
     int192 fixed_b_preinit;
@@ -273,7 +278,6 @@ exponent and bit class match the compile-time constants below.
     fixed_b_preinit.d4 = MFAKTC_FIXED_BPREINIT_WORD_VALUE(4);
     fixed_b_preinit.d5 = MFAKTC_FIXED_BPREINIT_WORD_VALUE(5);
 #undef MFAKTC_FIXED_BPREINIT_WORD_VALUE
-    (void)b_preinit;
 #endif
 
 #ifdef MFAKTC_BARRETT87_GS_FIXED_PROCESS_BITS
@@ -306,6 +310,9 @@ exponent and bit class match the compile-time constants below.
         );
     }
 }
+#undef MFAKTC_FIXED_DEBUG_PARAM
+#undef MFAKTC_FIXED_BPREINIT_PARAM
+#undef MFAKTC_FIXED_PROCESS_PARAM
 #endif
 
 __global__ void
