@@ -11,6 +11,11 @@ CFLAGS_EXTRA_SIEVE = -funroll-all-loops
 # compiler settings for .cu files (GPU)
 NVCC = nvcc
 NVCCFLAGS = $(CUDA_INCLUDE) --ptxas-options=-v -O3 -Wno-deprecated-gpu-targets
+THREADS_PER_BLOCK ?= 256
+ifneq ($(THREADS_PER_BLOCK),256)
+NVCCFLAGS += -DMFAKTC_THREADS_PER_BLOCK=$(THREADS_PER_BLOCK)
+CFLAGS += -DMFAKTC_THREADS_PER_BLOCK=$(THREADS_PER_BLOCK)
+endif
 LINEINFO ?= 0
 ifeq ($(LINEINFO),1)
 NVCCFLAGS += -lineinfo

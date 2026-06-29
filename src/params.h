@@ -104,7 +104,14 @@ time. When it is increased too much you might run out of register space
 (especially on GPUs with compute capability 1.0 and 1.1)
 */
 
+#ifdef MFAKTC_THREADS_PER_BLOCK
+#define THREADS_PER_BLOCK MFAKTC_THREADS_PER_BLOCK
+#else
 #define THREADS_PER_BLOCK 256 /* DO NOT CHANGE! */
+#endif
+#if THREADS_PER_BLOCK != 256 && THREADS_PER_BLOCK != 512
+#error "THREADS_PER_BLOCK override currently supports only 256 or 512"
+#endif
 
 /*
 SIEVE_PRIMES defines how far we sieve the factor candidates.

@@ -20,11 +20,11 @@ __device__ static void create_k_deltas(unsigned int *bit_array, unsigned int bit
                                        unsigned short *k_deltas)
 {
     int i, words_per_thread, sieve_word, k_bit_base;
-    __shared__ volatile unsigned short bitcount[256]; // Each thread of our block puts bit-counts here
+    __shared__ volatile unsigned short bitcount[THREADS_PER_BLOCK]; // Each thread of our block puts bit-counts here
 
     // Get pointer to section of the bit_array this thread is processing.
 
-    words_per_thread = bits_to_process / 8192;
+    words_per_thread = bits_to_process / (THREADS_PER_BLOCK * 32);
     bit_array += blockIdx.x * bits_to_process / 32 + threadIdx.x * words_per_thread;
 
     // Count number of bits set in this thread's word(s) from the bit_array
@@ -35,7 +35,7 @@ __device__ static void create_k_deltas(unsigned int *bit_array, unsigned int bit
 
     // Create total count of bits set in block up to and including this threads popc.
     // Kudos to Rocke Verser for the population counting code.
-    // CAUTION:  Following requires 256 threads per block
+    // CAUTION:  Following requires power-of-two block sizes up to 512 threads.
 
     // First five tallies remain within one warp.  Should be in lock-step.
     if (threadIdx.x & 1) // If we are running on any thread 0bxxxxxxx1, tally neighbor's count.
@@ -64,13 +64,19 @@ __device__ static void create_k_deltas(unsigned int *bit_array, unsigned int bit
 
     __syncthreads();
     if (threadIdx.x & 128) // If we are running on any thread 0b1xxxxxxx, tally neighbor's count.
-        bitcount[threadIdx.x] += bitcount[127];
+        bitcount[threadIdx.x] += bitcount[(threadIdx.x - 128) | 127];
+
+#if THREADS_PER_BLOCK > 256
+    __syncthreads();
+    if (threadIdx.x & 256)
+        bitcount[threadIdx.x] += bitcount[255];
+#endif
 
     // At this point, bitcount[...] contains the total number of bits for the indexed
-    // thread plus all lower-numbered threads.  I.e., bitcount[255] is the total count.
+    // thread plus all lower-numbered threads.  I.e., the last entry is the total count.
 
     __syncthreads();
-    *total_bit_count = bitcount[255];
+    *total_bit_count = bitcount[THREADS_PER_BLOCK - 1];
 
     //POSSIBLE OPTIMIZATION - bitcounts and k_deltas could use the same memory space if we'd read bitcount into a register
     // and sync threads before doing any writes to k_deltas.
