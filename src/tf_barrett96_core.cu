@@ -448,6 +448,21 @@ __device__ static void test_FC96_barrett87(int96 f, int192 b, unsigned int shift
 }
 
 #ifdef MFAKTC_BARRETT87_GS_FIXED_SHIFTER_KERNEL
+#ifdef MFAKTC_BARRETT87_GS_FIXED_SQUARE160_GUARD
+__device__ static __forceinline__ void square_96_192_or_160_guarded(int192 *res, int96 a)
+{
+    if (a.d2 < 0x00010000U) {
+        square_96_160(res, a);
+        res->d5 = 0;
+    } else {
+        square_96_192(res, a);
+    }
+}
+#define MFAKTC_BARRETT87_FIXED_SQUARE_96_192(RES, A) square_96_192_or_160_guarded((RES), (A))
+#else
+#define MFAKTC_BARRETT87_FIXED_SQUARE_96_192(RES, A) square_96_192((RES), (A))
+#endif
+
 template <int FIXED_BIT_MAX64, unsigned int FIXED_SHIFTER>
 __device__ static __forceinline__ void test_FC96_barrett87_fixed_shifter(int96 f, int192 b, unsigned int *RES
 #ifdef DEBUG_GPU_MATH
@@ -550,7 +565,7 @@ __device__ static __forceinline__ void test_FC96_barrett87_fixed_shifter(int96 f
 #define BARRETT87_FIXED_SHIFTER_STEP(STEP)                                                                            \
     if ((FIXED_SHIFTER << (STEP)) != 0U) {                                                                            \
         trace_96_textmsg(__FILE__, __LINE__, f, "--- fixed-shifter loop step ---");                                  \
-        square_96_192(&b, a);                                                                                         \
+        MFAKTC_BARRETT87_FIXED_SQUARE_96_192(&b, a);                                                                  \
         trace_96_192(__FILE__, __LINE__, f, "b", b);                                                                  \
                                                                                                                        \
         a.d0 = __fshift_r(b.d2, b.d3, bit_max64 - 1);                                                                 \
@@ -613,6 +628,7 @@ __device__ static __forceinline__ void test_FC96_barrett87_fixed_shifter(int96 f
 
     mod_simple_96_and_check_big_factor96(a, f, ff, RES);
 }
+#undef MFAKTC_BARRETT87_FIXED_SQUARE_96_192
 #endif
 
 __device__ static void test_FC96_barrett79(int96 f, int192 b, unsigned int shifter, unsigned int *RES
