@@ -133,7 +133,13 @@ extern "C" __host__ int tf_class_barrett92_gs(unsigned long long int k_min, unsi
     else
         shared_mem_required = 22; // 67894 primes expect 19.94%
 #endif
-    shared_mem_required = mystuff->gpu_sieve_processing_size * sizeof(int) * shared_mem_required / 100;
+    shared_mem_required = mystuff->gpu_sieve_processing_size *
+#ifdef MFAKTC_KDELTA_SMEM_U16
+                          sizeof(unsigned short) *
+#else
+                          sizeof(int) *
+#endif
+                          shared_mem_required / 100;
 
     // FIXME: can't use all the shared memory for GPU sieve, lets keep 1kiB spare...
     if (mystuff->verbosity >= 3) printf("shared_mem_required = %d bytes\n", shared_mem_required + 1024);

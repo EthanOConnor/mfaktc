@@ -27,6 +27,10 @@ SQUARE96_U16 ?= 0
 ifeq ($(SQUARE96_U16),1)
 NVCCFLAGS += -DMFAKTC_FORCE_SQUARE96_U16
 endif
+KDELTA_SMEM_U16 ?= 0
+ifeq ($(KDELTA_SMEM_U16),1)
+NVCCFLAGS += -DMFAKTC_KDELTA_SMEM_U16
+endif
 
 # generate code for compute capabilities - see this table for supported
 # versions: https://en.wikipedia.org/wiki/CUDA#GPUs_supported
