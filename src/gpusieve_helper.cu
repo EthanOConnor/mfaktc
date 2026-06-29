@@ -147,7 +147,14 @@ __device__ static void create_k_deltas_fixed_process(unsigned int *bit_array, in
 {
     enum { WORDS_PER_THREAD = MFAKTC_BARRETT87_GS_FIXED_PROCESS_BITS / (THREADS_PER_BLOCK * 32) };
     int i, words_per_thread, sieve_word, k_bit_base;
+#ifdef MFAKTC_KDELTA_WARP_SCAN
+    enum { WARP_THREADS = 32, WARPS_PER_BLOCK = THREADS_PER_BLOCK / WARP_THREADS };
+    unsigned int bit_count, global_inclusive, lane, warp, warp_count, warp_inclusive;
+    __shared__ unsigned int warp_prefix[WARPS_PER_BLOCK];
+    __shared__ unsigned int block_total;
+#else
     __shared__ volatile unsigned short bitcount[THREADS_PER_BLOCK]; // Each thread of our block puts bit-counts here
+#endif
 
     // Get pointer to section of the bit_array this thread is processing.
 
@@ -155,6 +162,42 @@ __device__ static void create_k_deltas_fixed_process(unsigned int *bit_array, in
 
     // Count number of bits set in this thread's word(s) from the bit_array
 
+#ifdef MFAKTC_KDELTA_WARP_SCAN
+    bit_count = 0;
+#pragma unroll
+    for (i = 0; i < WORDS_PER_THREAD; i++)
+        bit_count += __popc(bit_array[i]);
+
+    lane = threadIdx.x & (WARP_THREADS - 1);
+    warp = threadIdx.x / WARP_THREADS;
+    global_inclusive = bit_count;
+#pragma unroll
+    for (i = 1; i < WARP_THREADS; i <<= 1) {
+        unsigned int neighbor = __shfl_up_sync(0xffffffffU, global_inclusive, i);
+        if (lane >= (unsigned int)i) global_inclusive += neighbor;
+    }
+
+    if (lane == WARP_THREADS - 1) warp_prefix[warp] = global_inclusive;
+
+    __syncthreads();
+
+    if (warp == 0) {
+        warp_count = (lane < WARPS_PER_BLOCK) ? warp_prefix[lane] : 0;
+        warp_inclusive = warp_count;
+#pragma unroll
+        for (i = 1; i < WARP_THREADS; i <<= 1) {
+            unsigned int neighbor = __shfl_up_sync(0xffffffffU, warp_inclusive, i);
+            if (lane >= (unsigned int)i) warp_inclusive += neighbor;
+        }
+
+        if (lane < WARPS_PER_BLOCK) warp_prefix[lane] = warp_inclusive - warp_count;
+        if (lane == WARPS_PER_BLOCK - 1) block_total = warp_inclusive;
+    }
+
+    __syncthreads();
+    *total_bit_count = block_total;
+    global_inclusive += warp_prefix[warp];
+#else
     bitcount[threadIdx.x] = 0;
 #pragma unroll
     for (i = 0; i < WORDS_PER_THREAD; i++)
@@ -204,13 +247,18 @@ __device__ static void create_k_deltas_fixed_process(unsigned int *bit_array, in
 
     __syncthreads();
     *total_bit_count = bitcount[THREADS_PER_BLOCK - 1];
+#endif
 
     // Loop til this thread's section of the bit array is finished.
 
     words_per_thread = WORDS_PER_THREAD;
     sieve_word = *bit_array;
     k_bit_base = threadIdx.x * WORDS_PER_THREAD * 32;
+#ifdef MFAKTC_KDELTA_WARP_SCAN
+    for (i = *total_bit_count - global_inclusive;; i++) {
+#else
     for (i = *total_bit_count - bitcount[threadIdx.x];; i++) {
+#endif
         int bit_to_test;
 
         // Make sure we have a non-zero sieve word
