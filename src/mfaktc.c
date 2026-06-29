@@ -94,6 +94,40 @@ int kernel_possible(int kernel, mystuff_t *mystuff)
     return ret;
 }
 
+static const char *kernel_name_from_id(int kernel)
+{
+    switch (kernel) {
+    case AUTOSELECT_KERNEL: return "auto";
+    case _75BIT_MUL32: return "75bit_mul32";
+    case _95BIT_MUL32: return "95bit_mul32";
+    case BARRETT76_MUL32: return "barrett76_mul32";
+    case BARRETT77_MUL32: return "barrett77_mul32";
+    case BARRETT79_MUL32: return "barrett79_mul32";
+    case BARRETT87_MUL32: return "barrett87_mul32";
+    case BARRETT88_MUL32: return "barrett88_mul32";
+    case BARRETT92_MUL32: return "barrett92_mul32";
+    case _75BIT_MUL32_GS: return "75bit_mul32_gs";
+    case _95BIT_MUL32_GS: return "95bit_mul32_gs";
+    case BARRETT76_MUL32_GS: return "barrett76_mul32_gs";
+    case BARRETT77_MUL32_GS: return "barrett77_mul32_gs";
+    case BARRETT79_MUL32_GS: return "barrett79_mul32_gs";
+    case BARRETT87_MUL32_GS: return "barrett87_mul32_gs";
+    case BARRETT88_MUL32_GS: return "barrett88_mul32_gs";
+    case BARRETT92_MUL32_GS: return "barrett92_mul32_gs";
+    default: return "UNKNOWN kernel";
+    }
+}
+
+static int kernel_id_from_name(const char *name)
+{
+    int kernel;
+
+    for (kernel = AUTOSELECT_KERNEL; kernel <= BARRETT92_MUL32_GS; kernel++) {
+        if (!strcmp(name, kernel_name_from_id(kernel))) return kernel;
+    }
+    return -1;
+}
+
 int class_needed(unsigned int exp, unsigned long long int k_min, int c)
 /*   checks whether the class c must be processed or can be ignored at all because
      all factor candidates within the class c are a multiple of 3, 5, 7 or 11 (11
@@ -237,6 +271,12 @@ int tf(mystuff_t *mystuff, int class_hint, unsigned long long int k_hint, int ke
             else if (kernel_possible(_75BIT_MUL32,       mystuff)) kernel = _75BIT_MUL32;
             else if (kernel_possible(_95BIT_MUL32,       mystuff)) kernel = _95BIT_MUL32;
         }
+    }
+
+    if (kernel == AUTOSELECT_KERNEL || !kernel_possible(kernel, mystuff)) {
+        logprintf(mystuff, "ERROR: GPU kernel \"%s\" cannot handle %s%u from 2^%d to 2^%d.\n", kernel_name_from_id(kernel),
+                  NAME_NUMBERS, mystuff->exponent, mystuff->bit_min, mystuff->bit_max_stage);
+        return RET_CUDA_ERROR;
     }
 
     if (kernel == _75BIT_MUL32)            sprintf(mystuff->stats.kernelname, "75bit_mul32");
@@ -724,6 +764,7 @@ int main(int argc, char **argv)
     char *ptr;
     int use_worktodo = 1;
     int run_startup_selftest = 1;
+    int forced_kernel = AUTOSELECT_KERNEL;
 
     i = 1;
     memset(&mystuff, 0, sizeof(mystuff));
@@ -802,6 +843,17 @@ int main(int argc, char **argv)
             mystuff.selftestsize = 2;
         } else if (!strcmp((char *)"--no-startup-selftest", argv[i])) {
             run_startup_selftest = 0;
+        } else if (!strcmp((char *)"--force-kernel", argv[i])) {
+            if (i + 1 >= argc) {
+                logprintf(&mystuff, "ERROR: no kernel name specified for option \"--force-kernel\"\n");
+                return 1;
+            }
+            forced_kernel = kernel_id_from_name(argv[i + 1]);
+            if (forced_kernel < 0) {
+                logprintf(&mystuff, "ERROR: unknown kernel name for option \"--force-kernel\": %s\n", argv[i + 1]);
+                return 1;
+            }
+            i++;
         } else if (!strcmp((char *)"--timertest", argv[i])) {
             timertest();
             return 0;
@@ -1130,7 +1182,7 @@ int main(int argc, char **argv)
                 }
                 tmp = 0;
                 while (mystuff.bit_max_stage <= mystuff.bit_max_assignment && !mystuff.quit) {
-                    tmp = tf(&mystuff, 0, 0, AUTOSELECT_KERNEL);
+                    tmp = tf(&mystuff, 0, 0, forced_kernel);
                     // tmp = tf(&mystuff, 0, 0, _75BIT_MUL32);
                     // tmp = tf(&mystuff, 0, 0, _75BIT_MUL32_GS);
                     // tmp = tf(&mystuff, 0, 0, _95BIT_MUL32);

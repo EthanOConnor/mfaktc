@@ -58,6 +58,7 @@ void print_help(char *string)
     printf("  -st2                   same as -st but use extended range for k_min and k_max\n");
     printf("  -v <number>            verbosity level: terse = 0, default = 1, more = 2,\n");
     printf("                                          maximum = 3\n");
+    printf("  --force-kernel <name>  benchmarking only: force a valid kernel name instead of autoselect\n");
     printf("\n");
     printf("options for debugging purposes\n");
     printf("  --no-startup-selftest  skip normal-mode startup self-test after separate validation\n");
