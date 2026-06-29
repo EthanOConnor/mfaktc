@@ -41,6 +41,9 @@ const uint32 threadsPerBlock     = GPUSIEVE_THREADS_PER_BLOCK;   // Threads per 
 #ifdef MORE_CLASSES
 const uint32 primesNotSieved     = 5;                       // Primes 2, 3, 5, 7, 11 are not sieved
 
+#ifdef MFAKTC_GPUSIEVE_SPECIAL_CODE
+const uint32 primesHandledWithSpecialCode = MFAKTC_GPUSIEVE_SPECIAL_CODE;
+#else
 // const uint32 primesHandledWithSpecialCode = 13;          // Count of primes handled with inline code (not using primes array)
                                                             // Primes 13 through 61 are handled specially
 // const uint32 primesHandledWithSpecialCode = 26;          // Count of primes handled with inline code (not using primes array)
@@ -49,8 +52,12 @@ const uint32 primesHandledWithSpecialCode    = 49;          // Count of primes h
                                                             // Primes 13 through 251 are handled specially
 // const uint32 primesHandledWithSpecialCode = 92;          // Count of primes handled with inline code (not using primes array)
                                                             // Primes 13 through 509 are handled specially
+#endif
 #else
 const uint32 primesNotSieved                 = 4;           // Primes 2, 3, 5, 7 are not sieved
+#ifdef MFAKTC_GPUSIEVE_SPECIAL_CODE
+const uint32 primesHandledWithSpecialCode = MFAKTC_GPUSIEVE_SPECIAL_CODE;
+#else
 // const uint32 primesHandledWithSpecialCode = 14;          // Count of primes handled with inline code (not using primes array)
                                                             // Primes 11 through 61 are handled specially
 // const uint32 primesHandledWithSpecialCode = 27;          // Count of primes handled with inline code (not using primes array)
@@ -59,6 +66,7 @@ const uint32 primesHandledWithSpecialCode    = 50;          // Count of primes h
                                                             // Primes 11 through 251 are handled specially
 // const uint32 primesHandledWithSpecialCode = 93;          // Count of primes handled with inline code (not using primes array)
                                                             // Primes 11 through 509 are handled specially
+#endif
 #endif
 // clang-format on
 

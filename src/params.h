@@ -109,8 +109,8 @@ time. When it is increased too much you might run out of register space
 #else
 #define THREADS_PER_BLOCK 256 /* DO NOT CHANGE! */
 #endif
-#if THREADS_PER_BLOCK != 256 && THREADS_PER_BLOCK != 512
-#error "THREADS_PER_BLOCK override currently supports only 256 or 512"
+#if THREADS_PER_BLOCK < 32 || THREADS_PER_BLOCK > 1024 || (THREADS_PER_BLOCK % 32) != 0
+#error "THREADS_PER_BLOCK must be a warp-sized multiple between 32 and 1024"
 #endif
 
 /*
