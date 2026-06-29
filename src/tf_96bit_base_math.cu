@@ -330,7 +330,7 @@ __device__ static void square_96_192(int192 *res, int96 a)
 /* res = a^2
 assuming that a is < 2^95 (a.d2 < 2^31)! */
 {
-#if (__CUDA_ARCH__ >= COMPUTE_CAPABILITY_PASCAL) && (__CUDA_ARCH__ < VOLTA)
+#if defined(MFAKTC_FORCE_SQUARE96_U16) || ((__CUDA_ARCH__ >= COMPUTE_CAPABILITY_PASCAL) && (__CUDA_ARCH__ < VOLTA))
     asm volatile("{\n\t"
                  ".reg .u16 a0, a1, a2, a3, a4, a5;\n\t" /* 16 bits of input each, FIXME: a5 not needed */
                  ".reg .u32 s0, s1, s2, s3, s4, s5;\n\t"
@@ -511,7 +511,7 @@ this is a stripped down version of square_96_192, it doesn't compute res.d5
 and is a little bit faster.
 For correct results a must be less than 2^80 (a.d2 less than 2^16) */
 {
-#if (__CUDA_ARCH__ >= COMPUTE_CAPABILITY_PASCAL) && (__CUDA_ARCH__ < VOLTA)
+#if defined(MFAKTC_FORCE_SQUARE96_U16) || ((__CUDA_ARCH__ >= COMPUTE_CAPABILITY_PASCAL) && (__CUDA_ARCH__ < VOLTA))
     asm volatile("{\n\t"
                  ".reg .u16 a0, a1, a2, a3, a4, a5;\n\t" /* 16 bits of input each, FIXME: a5 not needed */
                  ".reg .u32 s0, s1, s2, s3, s4;\n\t"

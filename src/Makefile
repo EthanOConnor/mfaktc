@@ -23,6 +23,10 @@ BARRETT87_BIT15 ?= 0
 ifeq ($(BARRETT87_BIT15),1)
 NVCCFLAGS += -DMFAKTC_BARRETT87_BIT15_SPECIAL
 endif
+SQUARE96_U16 ?= 0
+ifeq ($(SQUARE96_U16),1)
+NVCCFLAGS += -DMFAKTC_FORCE_SQUARE96_U16
+endif
 
 # generate code for compute capabilities - see this table for supported
 # versions: https://en.wikipedia.org/wiki/CUDA#GPUs_supported
